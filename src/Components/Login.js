@@ -89,9 +89,10 @@ const LogIn = () => {
       });
 
       if (response.status === 200) {
-        const { employeeId, employeeName } = response.data;
+        const { employeeId, employeeName, email } = response.data;
         localStorage.setItem('employeeId', employeeId);
         localStorage.setItem('employeeName', employeeName);
+        localStorage.setItem('email', email);
         navigate('/Board');
       }
     } catch (error) {

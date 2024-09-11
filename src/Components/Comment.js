@@ -1,7 +1,14 @@
-import React, { useState, useRef ,useEffect} from "react";
 import styled from "styled-components";
-import { RiArrowDropDownLine } from "react-icons/ri";
+// import { RiArrowDropDownLine } from "react-icons/ri";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { RiArrowDropDownLine, RiCalendarLine } from "react-icons/ri";
+import { MdOutlineDateRange } from "react-icons/md";
+import React, { useState, useEffect, useRef } from 'react';
 import { EmojiKeyboard } from "reactjs-emoji-keyboard";
+import { TfiCommentsSmiley } from "react-icons/tfi";
+import { FaUsers } from "react-icons/fa";
+import Members from './Members';
 
 const CardContainer = styled.div`
   background-color: #F0F1F4;
@@ -12,11 +19,53 @@ const CardContainer = styled.div`
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 `;
 
+const Datebutton = styled.button`
+  position: absolute; /* Position relative to CardContainer */
+  top: 16px; /* Adjust top positioning as needed */
+  right: 16px; /* Adjust right positioning as needed */
+  background-color: #9C446E;
+  color: black;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+`;
+
+const Memberbutton = styled.button`
+  position: absolute; /* Position relative to CardContainer */
+  top: 56px; /* Adjust top positioning as needed */
+  right: 16px; /* Adjust right positioning as needed */
+  background-color: #9C446E;
+  color: black;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+`;
+
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+`;
+
+const MembersContainer = styled.div`
+ color:black;
+  padding: 16px;
+  background-color: #F0F1F4;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+`;
+
+const MemberItem = styled.div`
+  padding: 8px;
+  border-bottom: 1px solid #ccc;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #ddd;
+  }
 `;
 
 const Title = styled.h2`
@@ -67,6 +116,17 @@ const Dropdown = styled.div`
   z-index: 10;
 `;
 
+const Modal = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #B692C2;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+`;
 const DropdownItem = styled.div`
   padding: 8px 16px;
   font-size: 14px;
@@ -149,7 +209,7 @@ const Actions = styled.div`
 `;
 
 const Button = styled.button`
-  background-color: #e74c3c;
+  background-color: #3498db;
   color: white;
   padding: 8px 12px;
   border-radius: 4px;
@@ -158,18 +218,22 @@ const Button = styled.button`
   font-size: 14px;
 
   &:hover {
-    background-color: #c0392b;
+    background-color: #2980b9;
   }
 `;
 
-const Comment = () => {
+const Comment = ({ cardId, cardName, boardName }) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [file, setFile] = useState(null);
   const [image, setImage] = useState(null);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const descriptionRef = useRef(null);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
 
+  
   const toggleDropdown = () => {
     setDropdownOpen(!isDropdownOpen);
   };
@@ -248,76 +312,213 @@ const Comment = () => {
     }
   };
 
-  const handleSave = () => {
-    const description = descriptionRef.current.textContent;
+  const handleStartDateChange = (date) => {
+    setStartDate(date);
+    // Close modal if both dates are selected
+    if (date && endDate) {
+      closeModal();
+    }
+  };
+
+  const handleEndDateChange = (date) => {
+    setEndDate(date);
+    // Close modal if both dates are selected
+    if (date && startDate) {
+      closeModal();
+    }
+  };
+  const openModal = () => {
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+  };
+
+  const [isModal1Open, setModal1Open] = useState(false);
+
+  const openMembers = () => {
+    setModal1Open(true); // Open modal
+  };
+
+  const closeMembers = () => {
+    setModal1Open(false); // Close modal
+  };
   
+
+
+
+  const handleSaveDescription = async () => {
+    const text = descriptionRef.current.textContent;
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/save-description/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text,
+          cardId,
+          cardName,
+          boardName
+        }),
+      });
+      const data = await response.json();
+      console.log("Description saved successfully:", data);
+    } catch (error) {
+      console.error("Error saving description:", error);
+    }
+  };
+
+
+
+  const fetchDescription = async () => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/save-description/?cardId=${cardId}&boardName=${boardName}&cardName=${cardName}`);
+      const data = await response.json();
+      if (data.error) {
+        console.error(data.error);
+      } else {
+        descriptionRef.current.textContent = data.text; // assuming the description field is named 'text'
+      }
+    } catch (error) {
+      console.error("Error fetching description:", error);
+    }
+  };
+  
+  useEffect(() => {
+    fetchDescription();
+  }, [cardId, boardName, cardName]);
+  
+
+  const handleSaveFilesImages = async () => {
     const formData = new FormData();
-    formData.append("description", description);
     if (file) {
       formData.append("file", file);
     }
     if (image) {
       formData.append("image", image);
     }
-  
-    fetch("http://127.0.0.1:8000/upload-content/", {
-      method: "POST",
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Content uploaded successfully:", data);
-      })
-      .catch((error) => {
-        console.error("Error uploading content:", error);
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/upload-content/", {
+        method: "POST",
+        body: formData,
       });
+      const data = await response.json();
+      console.log("Files and images uploaded successfully:", data);
+    } catch (error) {
+      console.error("Error uploading files and images:", error);
+    }
   };
+
+  const handleSave = () => {
+    handleSaveDescription(); // Save description text with additional fields
+    handleSaveFilesImages();  // Save files and images
+  };
+
+  const [members, setMembers] = useState([]);
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/add-membername/?cardId=${cardId}&boardName=${boardName}&cardName=${cardName}`);
+        const data = await response.json();
+        if (response.ok) {
+          console.log('Fetched members:', data);
+          setMembers(data); // Ensure data is an array
+        } else {
+          console.error('Error fetching members:', data.error);
+        }
+      } catch (error) {
+        console.error('Error fetching members:', error);
+      }
+    };
+
+    fetchMembers();
+  }, [cardId, boardName, cardName]);
+  
+  
+
   const [comments, setComments] = useState([]);
   const activityInputRef = useRef(null);
 
-  const fetchComments = () => {
-    fetch("http://127.0.0.1:8000/get-comments/")
-      .then((response) => response.json())
-      .then((data) => {
-        setComments(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching comments:", error);
-      });
+  const fetchComments = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/get-comments/");
+      const data = await response.json();
+      setComments(data);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
   };
 
   useEffect(() => {
     fetchComments(); // Fetch comments when component mounts
   }, []);
 
-  const handleSaveActivity = () => {
-    const commentText = activityInputRef.current.value;
+  const handleSaveActivity = async () => {
+    const commentText = activityInputRef.current.value.trim();
 
-    fetch("http://127.0.0.1:8000/save-comment/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ text: commentText }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Comment saved:", data);
-        fetchComments(); // Fetch comments after saving
-        activityInputRef.current.value = ""; // Clear input after saving
-      })
-      .catch((error) => {
-        console.error("Error saving comment:", error);
+    if (!commentText) {
+      alert("Comment cannot be empty!");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/save-comment/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: commentText,
+          cardId,
+          cardName,
+          boardName
+        }),
       });
+      const data = await response.json();
+      console.log("Comment saved:", data);
+      fetchComments(); // Refresh comments
+      activityInputRef.current.value = ""; // Clear the input
+    } catch (error) {
+      console.error("Error saving comment:", error);
+    }
   };
 
   return (
     <center>
       <CardContainer>
-        <Header>
-          <Title>Admin Work</Title>
+      <Header>
+          <Datebutton onClick={openModal}><MdOutlineDateRange size={25} color="black" />Dates</Datebutton> {/* Trigger modal */}
+          <Memberbutton onClick={openMembers}><FaUsers size={25} color="black" />Members</Memberbutton>
+          {isModal1Open && (
+          <Modal onClose={closeMembers}>
+            <Members
+              cardId={cardId} 
+              cardName={cardName} 
+              boardName={boardName}
+              closeModal={closeMembers}  />
+          </Modal>
+        )}
         </Header>
-
+        <div>
+      {/* Add more functionality here */}
+      <MembersContainer>
+      <h2>Members</h2>
+      {members.length > 0 ? (
+        members.map((member) => (
+          <MemberItem key={member.employeeId}>
+            {member.employeeName}
+          </MemberItem>
+        ))
+      ) : (
+        <p>No members found.</p>
+      )}
+    </MembersContainer>
+    </div>
         <Section>
           <SectionTitle>Description</SectionTitle>
           <DescriptionInputContainer>
@@ -387,26 +588,9 @@ const Comment = () => {
             placeholder="Add a comment or activity..."
             ref={activityInputRef}
           />
-           {/* <EmojiKeyboard
-      height={320}
-      width={350}
-      theme="dark"
-      searchLabel="Procurar emoji"
-      searchDisabled={false}
-      onEmojiSelect={(emoji) =>console.log(emoji)}          
-      categoryDisabled={false}
-    /> */}
           <Actions>
             <Button onClick={handleSaveActivity}>Comment</Button>
           </Actions>
-          <div style={{color:"black"}}>
-            {comments.map((comment) => (
-              <div key={comment.id}>
-                <p>{comment.text}</p>
-                <small>{new Date(comment.created_at).toLocaleString()}</small>
-              </div>
-            ))}
-          </div>
         </Section>
       </CardContainer>
     </center>

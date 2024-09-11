@@ -6,13 +6,15 @@ import Board from './Components/Board';
 import Todolist from './Components/Todolist';
 import Comment from './Components/Comment';
 import Sidebar from './Components/Sidebar';
+import Members from './Components/Members';
 import styled from "styled-components";
-import './App.css';
 import LogIn from './Components/Login';
+import './App.css';
+import SignOut from './Components/SignOut';
+
 
 const ContentContainer = styled.div`
     margin-left: ${({ sidebarVisible }) => (sidebarVisible ? '220px' : '0')}; /* Adjusted for sidebar width + some spacing */
-    padding: 20px;
 `;
 
 const AppContent = ({ boards, addBoard }) => {
@@ -27,10 +29,12 @@ const AppContent = ({ boards, addBoard }) => {
             <ContentContainer sidebarVisible={sidebarVisible}>
                 <Routes>
                     <Route path="/Board" element={<Board boards={boards} addBoard={addBoard} />} />
+                    <Route path='/SignOut' element={<SignOut/>} />
                     <Route path="/Register" element={<Register />} />
                     <Route path="/" element={<LogIn />} />
                     <Route path="/Todolist" element={<Todolist />} />
                     <Route path="/comment" element={<Comment />} />
+                    <Route path="/Members" element={<Members />} />
                 </Routes>
             </ContentContainer>
         </>

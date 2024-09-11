@@ -59,7 +59,7 @@ def LoginView(request):
         # Check if the password matches
         if check_password(password, user.password):
             # If password matches, login is successful
-            return JsonResponse({'message': 'Login successful!', 'employeeId': user.employeeId, 'employeeName': user.employeeName}, status=status.HTTP_200_OK)
+            return JsonResponse({'message': 'Login successful!', 'employeeId': user.employeeId, 'employeeName': user.employeeName, 'email': user.email}, status=status.HTTP_200_OK)
         else:
             # If password doesn't match
             return JsonResponse({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -69,10 +69,14 @@ def LoginView(request):
     
 
 from .models import Card
-from .serializers import CardSerializer,CardNameSerializer
+from .serializers import CardSerializer
+from django.shortcuts import get_object_or_404
+from django.utils.dateparse import parse_date
+import logging
+logger = logging.getLogger(__name__)
 @csrf_exempt
-@api_view(['POST', 'GET'])
-def CardCreateView(request):
+@api_view(['POST', 'GET', 'DELETE', 'PATCH'])
+def CardCreateView(request, card_id=None):
     if request.method == 'POST':
         serializer = CardSerializer(data=request.data)
         if serializer.is_valid():
@@ -80,9 +84,33 @@ def CardCreateView(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     elif request.method == 'GET':
-        cards = Card.objects.all()
-        serializer = CardNameSerializer(cards, many=True)
-        return Response(serializer.data)
+        board_name = request.query_params.get('boardName', None)
+        if card_id:
+            card = get_object_or_404(Card, cardId=card_id, boardName=board_name)
+            serializer = CardSerializer(card)
+            return Response(serializer.data)
+        else:
+            if board_name:
+                cards = Card.objects.filter(boardName=board_name)
+            else:
+                cards = Card.objects.all()
+            serializer = CardSerializer(cards, many=True)
+            return Response(serializer.data)
+    elif request.method == 'DELETE':
+        if card_id:
+            card = get_object_or_404(Card, cardId=card_id)
+            card.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'PATCH':
+        card = get_object_or_404(Card, cardId=card_id)
+        data = request.data
+        serializer = CardSerializer(card, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     
 
 from .models import Comment
@@ -120,7 +148,7 @@ collection = db['Tracker_board']
 
 @csrf_exempt
 @api_view(['GET', 'POST', 'PUT', 'DELETE'])
-def BoardsView(request, title=None):
+def BoardsView(request, boardName=None):
     if request.method == 'POST':
         serializer = BoardSerializer(data=request.data)
         if serializer.is_valid():
@@ -134,10 +162,10 @@ def BoardsView(request, title=None):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     elif request.method == 'PUT':
-        if title is None:
+        if boardName is None:
             return JsonResponse({'error': 'Title is required to update a board.'}, status=400)
         
-        board = collection.find_one({'title': title})
+        board = collection.find_one({'boardName': boardName})
         if not board:
             return JsonResponse({'error': 'Board not found.'}, status=404)
 
@@ -146,13 +174,13 @@ def BoardsView(request, title=None):
             return JsonResponse({'error': 'Unauthorized to edit this board.'}, status=403)
 
         updated_data = {
-            'title': request.data.get('title', board['title']),
+            'boardName': request.data.get('boardName', board['boardName']),
             'color': request.data.get('color', board['color']),
             'employeeId': request_employee_id,
             'employeeName': request.data.get('employeeName', board['employeeName']),
         }
         
-        result = collection.update_one({'title': title}, {'$set': updated_data})
+        result = collection.update_one({'boardName': boardName}, {'$set': updated_data})
 
         if result.modified_count > 0:
             return JsonResponse({'message': 'Board updated successfully!'}, status=200)
@@ -160,10 +188,10 @@ def BoardsView(request, title=None):
             return JsonResponse({'message': 'No changes made to the board.'}, status=200)
 
     elif request.method == 'DELETE':
-        if title is None:
+        if boardName is None:
             return JsonResponse({'error': 'Title is required to delete a board.'}, status=400)
         
-        board = collection.find_one({'title': title})
+        board = collection.find_one({'boardName': boardName})
         if not board:
             return JsonResponse({'error': 'Board not found.'}, status=404)
 
@@ -171,9 +199,63 @@ def BoardsView(request, title=None):
         if board['employeeId'] != request_employee_id:
             return JsonResponse({'error': 'Unauthorized to delete this board.'}, status=403)
 
-        result = collection.delete_one({'title': title})
+        result = collection.delete_one({'boardName': boardName})
 
         if result.deleted_count > 0:
             return JsonResponse({'message': 'Board deleted successfully!'}, status=204)
         else:
             return JsonResponse({'error': 'Board could not be deleted.'}, status=400)
+
+
+from .models import Members
+from .serializers import MemberSerializer
+@csrf_exempt
+@api_view(['POST', 'GET'])
+def add_member_to_card(request):
+    if request.method == 'POST':
+        serializer = MemberSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Member Added successfully!'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'GET':
+        card_id = request.query_params.get('cardId')
+        board_name = request.query_params.get('boardName')
+        card_name = request.query_params.get('cardName')
+        # Filter the description based on cardId, boardName, and cardName
+        try:
+            members = Members.objects.filter(cardId=card_id, boardName=board_name, cardName=card_name)
+            serializer = MemberSerializer(members, many=True)  # Serialize multiple objects
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Members.DoesNotExist:
+            return Response({"error": "Members not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+
+from .serializers import DescriptionSerializer
+from .models import Description
+@csrf_exempt
+@api_view(['POST', 'GET'])
+def save_description(request):
+    if request.method == 'POST':
+        print("Request data:", request.data)  # Log the incoming data
+        serializer = DescriptionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'GET':
+        card_id = request.query_params.get('cardId')
+        board_name = request.query_params.get('boardName')
+        card_name = request.query_params.get('cardName')
+        # Filter the description based on cardId, boardName, and cardName
+        try:
+            description = Description.objects.get(cardId=card_id, boardName=board_name, cardName=card_name)
+            serializer = DescriptionSerializer(description)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Description.DoesNotExist:
+            return Response({"error": "Description not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+
+def get_all_employees(request):
+    employees = Employee.objects.all().values('employeeId', 'employeeName')
+    return JsonResponse(list(employees), safe=False)

@@ -5,153 +5,32 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp, faEllipsisH } from '@fortawesome/free-solid-svg-icons';
 import DeleteBoardModal from './DeleteBoardModal';
 import EditBoardModal from './EditBoardModal';
-// const SidebarContainer = styled.div`
-//     width: 220px;
-//     background-color: #19485F; /* Darker background for better contrast */
-//     padding: 20px;
-//     height: 100vh; /* Full viewport height */
-//     position: fixed; /* Fixes the sidebar in place */
-//     color: #C5C6C7;
-//     top: 0;
-//     left: 0;
-//     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); /* Adds a subtle shadow to the right */
-// `;
-
-// const SidebarHeader = styled.div`
-//     display: flex;
-//     justify-content: space-between;
-//     align-items: center;
-//     margin-bottom: 30px; /* Increased space for better separation */
-// `;
-
-// const SidebarTitle = styled.h2`
-//     font-size: 20px;
-//     margin: 0;
-//     color: #D9E0A4; /* Light cyan for the title */
-//     font-family: 'Arial', sans-serif;
-//     font-weight: 700; /* Bolder title */
-// `;
-
-// const SidebarNav = styled.nav`
-//     ul {
-//         list-style: none;
-//         padding: 0;
-//         margin: 0;
-//     }
-//     li {
-//         margin-bottom: 20px; /* Increased spacing between links */
-//     }
-// `;
-
-// const StyledNavLink = styled(NavLink)`
-//     color: #D9E0A4;
-//     text-decoration: none;
-//     font-size: 16px;
-//     font-family: 'Arial', sans-serif;
-//     font-weight: 500; /* Medium weight for a balanced look */
-//     padding: 10px;
-//     border-radius: 4px;
-//     display: block; /* Makes the entire link area clickable */
-
-//     &:hover {
-//         background-color: #D9E0A4; /* Slight hover effect with color change */
-//         color: #0B0C10; /* Darker text on hover */
-//         text-decoration: none; /* Ensures no underline on hover */
-//     }
-
-//     &.active {
-//         font-weight: 700;
-//         background-color: #D9E0A4; /* Highlight the active link */
-//         color: #0B0C10; /* Darker text for contrast */
-//     }
-// `;
-
-// const SidebarContainer = styled.div`
-//     width: 220px;
-//     background-color: #4A7766; /* Darker background for better contrast */
-//     padding: 20px;
-//     height: 100vh; /* Full viewport height */
-//     position: fixed; /* Fixes the sidebar in place */
-//     color: #C5C6C7;
-//     top: 0;
-//     left: 0;
-//     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); /* Adds a subtle shadow to the right */
-// `;
-
-// const SidebarHeader = styled.div`
-//     display: flex;
-//     justify-content: space-between;
-//     align-items: center;
-//     margin-bottom: 30px; /* Increased space for better separation */
-// `;
-
-// const SidebarTitle = styled.h2`
-//     font-size: 20px;
-//     margin: 0;
-//     color: #ECE7E2; /* Light cyan for the title */
-//     font-family: 'Arial', sans-serif;
-//     font-weight: 700; /* Bolder title */
-// `;
-
-// const SidebarNav = styled.nav`
-//     ul {
-//         list-style: none;
-//         padding: 0;
-//         margin: 0;
-//     }
-//     li {
-//         margin-bottom: 20px; /* Increased spacing between links */
-//     }
-// `;
-
-// const StyledNavLink = styled(NavLink)`
-//     color: #ECE7E2;
-//     text-decoration: none;
-//     font-size: 16px;
-//     font-family: 'Arial', sans-serif;
-//     font-weight: 500; /* Medium weight for a balanced look */
-//     padding: 10px;
-//     border-radius: 4px;
-//     display: block; /* Makes the entire link area clickable */
-
-//     &:hover {
-//         background-color: #ECE7E2; /* Slight hover effect with color change */
-//         color: #74512D; /* Darker text on hover */
-//         text-decoration: none; /* Ensures no underline on hover */
-//     }
-
-//     &.active {
-//         font-weight: 700;
-//         background-color: #ECE7E2; /* Highlight the active link */
-//         color: #74512D; /* Darker text for contrast */
-//     }
-// `;
-
+import SignOut from './SignOut';
 const SidebarContainer = styled.div`
     width: 220px;
-    background-color: #222831;
+    background-color: #19485F; /* Darker background for better contrast */
     padding: 20px;
-    height: 100vh;
-    position: fixed;
-    color: #F4F9F9;
+    height: 100vh; /* Full viewport height */
+    position: fixed; /* Fixes the sidebar in place */
+    color: white;
     top: 0;
     left: 0;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);       
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); /* Adds a subtle shadow to the right */
 `;
 
 const SidebarHeader = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 30px; /* Increased space for better separation */
 `;
 
 const SidebarTitle = styled.h2`
     font-size: 20px;
     margin: 0;
-    color: #F4F9F9;
+    color: white; /* Light cyan for the title */
     font-family: 'Arial', sans-serif;
-    font-weight: 700;
+    font-weight: 700; /* Bolder title */
 `;
 
 const SidebarNav = styled.nav`
@@ -161,30 +40,30 @@ const SidebarNav = styled.nav`
         margin: 0;
     }
     li {
-        margin-bottom: 20px;
+        margin-bottom: 20px; /* Increased spacing between links */
     }
 `;
 
 const StyledNavLink = styled(NavLink)`
-    color: #F4F9F9;
+    color: white;
     text-decoration: none;
     font-size: 16px;
     font-family: 'Arial', sans-serif;
-    font-weight: 500;
+    font-weight: 500; /* Medium weight for a balanced look */
     padding: 10px;
     border-radius: 4px;
-    display: block;
+    display: block; /* Makes the entire link area clickable */
 
     &:hover {
-        background-color: #F4F9F9;
-        color: #3C3D37;
-        text-decoration: none;
+        background-color: white; /* Slight hover effect with color change */
+        color: #19485F; /* Darker text on hover */
+        text-decoration: none; /* Ensures no underline on hover */
     }
 
     &.active {
         font-weight: 700;
-        background-color: #F4F9F9;
-        color: #3C3D37;
+        background-color: white; /* Highlight the active link */
+        color: #19485F; /* Darker text for contrast */
     }
 `;
 
@@ -274,7 +153,9 @@ const Sidebar = ({ boards, setBoards }) => {
     const [boardName, setBoardName] = useState('');
     const navigate = useNavigate();
 
-    const displayedBoards = showMore ? boards : boards.slice(0, 5);
+    const employeeId = localStorage.getItem('employeeId'); // Get employeeId from localStorage
+    const filteredBoards = boards.filter(board => board.employeeId === employeeId);
+    const displayedBoards = showMore ? filteredBoards : filteredBoards.slice(0, 5);
 
     const handleBoardClick = (board) => {
         navigate('/Todolist', { state: { boardColor: board.color } });
@@ -282,11 +163,11 @@ const Sidebar = ({ boards, setBoards }) => {
 
     const openDeleteModal = (board) => {
         setSelectedBoard(board);
-        setBoardName(board.boardName); 
+        setBoardName(board.boardName);
         setIsDeleteModalOpen(true);
         setActiveMenu(null);
     };
-    
+
     const closeDeleteModal = () => {
         setIsDeleteModalOpen(false);
         setSelectedBoard(null);
@@ -307,8 +188,6 @@ const Sidebar = ({ boards, setBoards }) => {
     };
 
     const saveEditedBoard = async (newTitle) => {
-        const employeeId = localStorage.getItem('employeeId'); // Get employeeId from localStorage
-        const employeeName = localStorage.getItem('employeeName');
         try {
             const updatedBoard = { ...selectedBoard, boardName: newTitle };
             const response = await fetch(`http://127.0.0.1:8000/boards/${selectedBoard.boardName}/`, {
@@ -316,11 +195,11 @@ const Sidebar = ({ boards, setBoards }) => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ boardName: newTitle, color: selectedBoard.color, employeeId, employeeName }), // Include employeeId
+                body: JSON.stringify({ boardName: newTitle, color: selectedBoard.color, employeeId }), // Include employeeId
             });
-    
+
             if (response.ok) {
-                const updatedBoards = boards.map((board) =>
+                const updatedBoards = filteredBoards.map((board) =>
                     board.boardName === selectedBoard.boardName ? updatedBoard : board
                 );
                 setBoards(updatedBoards);
@@ -332,8 +211,7 @@ const Sidebar = ({ boards, setBoards }) => {
             console.error('Error updating board:', error);
         }
     };
-    
-      
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (activeMenu !== null && !event.target.closest(`.menu-${activeMenu}`)) {
@@ -349,29 +227,28 @@ const Sidebar = ({ boards, setBoards }) => {
     }, [activeMenu]);
 
     const handleDeleteBoard = async () => {
-        const employeeId = localStorage.getItem('employeeId'); // Get employeeId from localStorage
         try {
-          const response = await fetch(`http://127.0.0.1:8000/boards/${selectedBoard.boardName}/`, {
-            method: 'DELETE',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ employeeId }), // Include employeeId
-          });
-      
-          if (response.ok) {
-            const updatedBoards = boards.filter(
-              (board) => board.boardName !== selectedBoard.boardName
-            );
-            setBoards(updatedBoards);
-            closeDeleteModal();
-          } else {
-            console.error('Failed to delete board:', await response.json());
-          }
+            const response = await fetch(`http://127.0.0.1:8000/boards/${selectedBoard.boardName}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ employeeId }), // Include employeeId
+            });
+
+            if (response.ok) {
+                const updatedBoards = filteredBoards.filter(
+                    (board) => board.boardName !== selectedBoard.boardName
+                );
+                setBoards(updatedBoards);
+                closeDeleteModal();
+            } else {
+                console.error('Failed to delete board:', await response.json());
+            }
         } catch (error) {
-          console.error('Error deleting board:', error);
+            console.error('Error deleting board:', error);
         }
-      };    
+    };
 
     const toggleMenu = (index) => {
         setActiveMenu(activeMenu === index ? null : index);
@@ -435,7 +312,10 @@ const Sidebar = ({ boards, setBoards }) => {
                     setBoardTitle={setBoardName}
                 />
             )}
+
+        <SignOut />
         </SidebarContainer>
+        
     );
 };
 

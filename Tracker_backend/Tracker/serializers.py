@@ -22,18 +22,15 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
 from .models import Card
 class CardSerializer(serializers.ModelSerializer):
-    id = ObjectIdField(read_only=True)
     class Meta:
         model = Card
-        fields = ['id', 'cardName', 'columnId', 'employeeId', 'employeeName','boardName', 'date', 'time']
-
-        
-class CardNameSerializer(serializers.ModelSerializer):
-    id = ObjectIdField(read_only=True)
-    class Meta:
-        model = Card
-        fields = ['id','cardName', 'columnId']  # Only include fields you need for the GET response
-
+        fields = ['cardId', 'cardName', 'columnId', 'employeeId', 'employeeName', 'boardName', 'date', 'time']
+        extra_kwargs = {
+            'employeeId': {'required': True},
+            'employeeName': {'required': True},
+            'boardName': {'required': True},
+        }
+    
 
 from .models import Comment
 class CommentSerializer(serializers.ModelSerializer):
@@ -49,3 +46,17 @@ class BoardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board
         fields = '__all__'
+
+
+from .models import Members
+class MemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Members
+        fields = ['cardId', 'cardName', 'boardName', 'employeeId', 'employeeName']
+
+
+from .models import Description
+class DescriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Description
+        fields = ['text', 'cardId', 'cardName', 'boardName', 'created_at']

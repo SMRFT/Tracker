@@ -9,15 +9,11 @@ const RegisterContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: fit-content;
+  min-height: 100vh; // Ensure it covers the full viewport height
   background-image: url(${Image1});
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  border-radius: 15px;
-  background-color: rgba(51, 52, 73, 0.8);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-  padding: 20px;
 `;
 
 const RegisterCard = styled.div`
