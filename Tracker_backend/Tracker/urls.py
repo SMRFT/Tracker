@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import RegisterView,BoardsView,LoginView,upload_content,CardCreateView,save_comment,get_comments,get_all_employees
-from .views import add_member_to_card,save_description
+from .views import RegisterView,BoardsView,LoginView,upload_content,CardCreateView, update_card,save_comment,get_comments
+from .views import get_file
 from django.conf import settings
 from django.conf.urls.static import static
+
 
 urlpatterns = [
     path('register/', RegisterView, name='register'),
@@ -10,13 +11,13 @@ urlpatterns = [
     path('upload-content/', upload_content, name='upload_content'),
     path('cards/', CardCreateView, name='card-list'),  # For creating/listing cards
     path('cards/<str:card_id>/', CardCreateView, name='card-detail'),  # For retrieving/deleting specific cards by cardId
+    path('cards/<str:card_id>/', update_card, name='update_card'),
     path('boards/', BoardsView, name='boards-list'),  # For GET and POST requests
-    path('boards/<str:boardName>/', BoardsView, name='board-detail'),  # For PUT and DELETE requests
-    path('save-comment/', save_comment, name='save_comment'),
-    path('get-comments/', get_comments, name='get_comments'),
-    path('get-employees/', get_all_employees, name='get_all_employees'),
-    path('add-membername/', add_member_to_card, name='add_member_to_card'),
-    path('save-description/', save_description, name='save_description'),
+    path('boards/<int:boardId>/', BoardsView, name='board-detail'),  # For PUT and DELETE requests
+    path('get-file/<str:filename>/', get_file, name='get_file'),
+    path('save_comment/', save_comment, name='save_comment'),
+    path('get_comments/', get_comments, name='get_comments'),
+
 ]
 
 if settings.DEBUG:

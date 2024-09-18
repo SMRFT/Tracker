@@ -27,7 +27,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'Tracker',
-    'rest_framework_simplejwt',
     ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -58,12 +57,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'Tracker_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
@@ -105,19 +99,8 @@ DATABASES = {
         }
     }
 }
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-}
+
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000","http://localhost:3001"
+    "http://localhost:3000"
 ]
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_HEADERS = [
-    'authorization',
-    'content-type',
-    'accept',
-    'origin',
-    'x-requested-with',
-]

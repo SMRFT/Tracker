@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
+
+
 from bson import ObjectId
 class ObjectIdField(serializers.Field):
     def to_representation(self, value):
@@ -20,43 +22,19 @@ class EmployeeSerializer(serializers.ModelSerializer):
         return super(EmployeeSerializer, self).create(validated_data)
     
 
+
+from .models import Board
+class BoardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Board
+        fields = ['boardId','boardName','boardColor','employeeId','employeeName','createdDate','createdTime']
+
+
+
+
 from .models import Card
 class CardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Card
-        fields = ['cardId', 'cardName', 'columnId', 'employeeId', 'employeeName', 'boardName', 'date', 'time']
-        extra_kwargs = {
-            'employeeId': {'required': True},
-            'employeeName': {'required': True},
-            'boardName': {'required': True},
-        }
-    
-
-from .models import Comment
-class CommentSerializer(serializers.ModelSerializer):
-    id = ObjectIdField(read_only=True)
-    class Meta:
-        model = Comment
-        fields = '__all__'
-
-    
-from .models import Board
-class BoardSerializer(serializers.ModelSerializer):
-    id = ObjectIdField(read_only=True)
-    class Meta:
-        model = Board
-        fields = '__all__'
-
-
-from .models import Members
-class MemberSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Members
-        fields = ['cardId', 'cardName', 'boardName', 'employeeId', 'employeeName']
-
-
-from .models import Description
-class DescriptionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Description
-        fields = ['text', 'cardId', 'cardName', 'boardName', 'created_at']
+        fields = ['boardId','employeeId','employeeName','cardId','cardName','columnId','createdDate','createdTime','startdate','enddate']
+        

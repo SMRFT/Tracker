@@ -155,6 +155,7 @@ const SuccessMessage = styled.div`
 `;
 const Board = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [boardId, setBoardId] = useState('');
     const [boardName, setBoardName] = useState('');
     const [boardColor, setBoardColor] = useState('#0079BF');
     const [boards, setBoards] = useState([]);
@@ -199,19 +200,19 @@ const Board = () => {
         setIsDialogOpen(false);
     };
     const handleBoardClick = (board) => {
-        navigate('/Todolist', { 
-            state: { 
-                boardColor: board.color, 
-                employeeId: board.employeeId, 
-                employeeName: board.employeeName, 
-                boardName: board.boardName 
-            } 
+        navigate('/Todolist', {
+            state: {
+                boardId:board.boardId,
+                boardColor: board.boardColor,
+                employeeId: board.employeeId,
+                employeeName: board.employeeName,
+                boardName: board.boardName
+            }
         });
     };
-    
     const handleCreateBoard = async () => {
         if (boardName.trim()) {
-            const newBoard = { boardName, color: boardColor, employeeId, employeeName };
+            const newBoard = { boardName, boardColor: boardColor, employeeId, employeeName , boardId};
             console.log('Creating new board:', newBoard);
             try {
                 const response = await fetch('http://127.0.0.1:8000/boards/', {
@@ -300,7 +301,7 @@ const Board = () => {
                     {getFilteredAndSortedBoards().map((board) => (
                         <BoardCard
                             key={board.id}
-                            bgColor={board.color}
+                            bgColor={board.boardColor}
                             onClick={() => handleBoardClick(board)}
                         >
                             {board.boardName}

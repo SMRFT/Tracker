@@ -17,14 +17,12 @@ const SidebarContainer = styled.div`
     left: 0;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); /* Adds a subtle shadow to the right */
 `;
-
 const SidebarHeader = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px; /* Increased space for better separation */
 `;
-
 const SidebarTitle = styled.h2`
     font-size: 20px;
     margin: 0;
@@ -32,7 +30,6 @@ const SidebarTitle = styled.h2`
     font-family: 'Arial', sans-serif;
     font-weight: 700; /* Bolder title */
 `;
-
 const SidebarNav = styled.nav`
     ul {
         list-style: none;
@@ -43,7 +40,6 @@ const SidebarNav = styled.nav`
         margin-bottom: 20px; /* Increased spacing between links */
     }
 `;
-
 const StyledNavLink = styled(NavLink)`
     color: white;
     text-decoration: none;
@@ -53,24 +49,20 @@ const StyledNavLink = styled(NavLink)`
     padding: 10px;
     border-radius: 4px;
     display: block; /* Makes the entire link area clickable */
-
     &:hover {
         background-color: white; /* Slight hover effect with color change */
         color: #19485F; /* Darker text on hover */
         text-decoration: none; /* Ensures no underline on hover */
     }
-
     &.active {
         font-weight: 700;
         background-color: white; /* Highlight the active link */
         color: #19485F; /* Darker text for contrast */
     }
 `;
-
 const BoardsSection = styled.div`
     margin-top: 30px;
 `;
-
 const BoardsTitle = styled.h3`
     font-size: 18px;
     margin-bottom: 15px;
@@ -78,7 +70,6 @@ const BoardsTitle = styled.h3`
     font-family: 'Arial', sans-serif;
     font-weight: 600;
 `;
-
 const BoardList = styled.ul`
     max-height: 200px;
     overflow-y: auto;
@@ -86,7 +77,6 @@ const BoardList = styled.ul`
     padding: 0;
     margin: 0;
 `;
-
 const BoardItem = styled.li`
     list-style: none;
     padding: 8px 16px;
@@ -95,8 +85,7 @@ const BoardItem = styled.li`
     justify-content: space-between;
     align-items: center;
     border-radius: 4px;
-    background-color: ${(props) => (props.isSelected ? '#f0f0f0' : 'transparent')};
-
+    background-color: ${(props) => (props.isSelected ? '#F0F0F0' : 'transparent')};
     &:before {
         content: '';
         display: inline-block;
@@ -106,7 +95,6 @@ const BoardItem = styled.li`
         margin-right: 12px;
     }
 `;
-
 const ShowMoreButton = styled.button`
     background: none;
     border: none;
@@ -117,7 +105,6 @@ const ShowMoreButton = styled.button`
     display: flex;
     align-items: center;
 `;
-
 const OptionsMenu = styled.div`
     position: absolute;
     background: #fff;
@@ -128,21 +115,18 @@ const OptionsMenu = styled.div`
     z-index: 10;
     color: black;
 `;
-
 const Option = styled.div`
     padding: 10px;
     cursor: pointer;
     &:hover {
-        background-color: #f0f0f0;
+        background-color: #F0F0F0;
     }
 `;
-
 const ThreeDotIcon = styled(FontAwesomeIcon)`
     color: #F4F9F9;
     margin-left: 10px;
     cursor: pointer;
 `;
-
 const Sidebar = ({ boards, setBoards }) => {
     const [showMore, setShowMore] = useState(false);
     const [selectedBoard, setSelectedBoard] = useState(null);
@@ -151,56 +135,57 @@ const Sidebar = ({ boards, setBoards }) => {
     const [activeMenu, setActiveMenu] = useState(null);
     const [editingBoardIndex, setEditingBoardIndex] = useState(null);
     const [boardName, setBoardName] = useState('');
+    const [boardId, setBoardId] = useState('');
     const navigate = useNavigate();
-
     const employeeId = localStorage.getItem('employeeId'); // Get employeeId from localStorage
     const filteredBoards = boards.filter(board => board.employeeId === employeeId);
     const displayedBoards = showMore ? filteredBoards : filteredBoards.slice(0, 5);
-
     const handleBoardClick = (board) => {
-        navigate('/Todolist', { state: { boardColor: board.color } });
+        navigate('/Todolist', { state: { boardColor: board.boardColor } });
     };
-
     const openDeleteModal = (board) => {
         setSelectedBoard(board);
         setBoardName(board.boardName);
+        setBoardId(board.boardId);
         setIsDeleteModalOpen(true);
         setActiveMenu(null);
     };
-
     const closeDeleteModal = () => {
         setIsDeleteModalOpen(false);
         setSelectedBoard(null);
     };
-
     const openEditModal = (board, index) => {
         setSelectedBoard(board);
         setEditingBoardIndex(index);
         setBoardName(board.boardName);
+        setBoardId(board.boardId);
         setIsEditModalOpen(true);
         setActiveMenu(null);
     };
-
     const closeEditModal = () => {
         setIsEditModalOpen(false);
         setSelectedBoard(null);
         setEditingBoardIndex(null);
     };
-
     const saveEditedBoard = async (newTitle) => {
         try {
             const updatedBoard = { ...selectedBoard, boardName: newTitle };
-            const response = await fetch(`http://127.0.0.1:8000/boards/${selectedBoard.boardName}/`, {
+            const response = await fetch(`http://127.0.0.1:8000/boards/${selectedBoard.boardId}/`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ boardName: newTitle, color: selectedBoard.color, employeeId }), // Include employeeId
+                body: JSON.stringify({
+                    boardName: newTitle,
+                    boardColor: selectedBoard.boardColor,
+                    employeeId: selectedBoard.employeeId, // Ensure employeeId is sent
+                    employeeName: selectedBoard.employeeName // Include employeeName if needed
+                }),
             });
-
+    
             if (response.ok) {
                 const updatedBoards = filteredBoards.map((board) =>
-                    board.boardName === selectedBoard.boardName ? updatedBoard : board
+                    board.boardId === selectedBoard.boardId ? updatedBoard : board
                 );
                 setBoards(updatedBoards);
                 closeEditModal();
@@ -211,34 +196,31 @@ const Sidebar = ({ boards, setBoards }) => {
             console.error('Error updating board:', error);
         }
     };
-
+    
+    
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (activeMenu !== null && !event.target.closest(`.menu-${activeMenu}`)) {
                 setActiveMenu(null);
             }
         };
-
         document.addEventListener('mousedown', handleClickOutside);
-
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [activeMenu]);
-
     const handleDeleteBoard = async () => {
         try {
-            const response = await fetch(`http://127.0.0.1:8000/boards/${selectedBoard.boardName}/`, {
+            const response = await fetch(`http://127.0.0.1:8000/boards/${selectedBoard.boardId}/`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ employeeId }), // Include employeeId
             });
-
             if (response.ok) {
                 const updatedBoards = filteredBoards.filter(
-                    (board) => board.boardName !== selectedBoard.boardName
+                    (board) => board.boardId !== selectedBoard.boardId
                 );
                 setBoards(updatedBoards);
                 closeDeleteModal();
@@ -249,11 +231,9 @@ const Sidebar = ({ boards, setBoards }) => {
             console.error('Error deleting board:', error);
         }
     };
-
     const toggleMenu = (index) => {
         setActiveMenu(activeMenu === index ? null : index);
     };
-
     return (
         <SidebarContainer>
             <SidebarHeader>
@@ -273,12 +253,11 @@ const Sidebar = ({ boards, setBoards }) => {
                     </li>
                 </ul>
             </SidebarNav>
-
             <BoardsSection>
                 <BoardsTitle>Your Boards</BoardsTitle>
                 <BoardList>
                     {displayedBoards.map((board, index) => (
-                        <BoardItem key={board.id} bgColor={board.color} onClick={() => handleBoardClick(board)}>
+                        <BoardItem key={board.id} bgColor={board.boardColor} onClick={() => handleBoardClick(board)}>
                             {board.boardName}
                             <ThreeDotIcon icon={faEllipsisH} onClick={() => toggleMenu(index)} />
                             {activeMenu === index && (
@@ -295,7 +274,6 @@ const Sidebar = ({ boards, setBoards }) => {
                     <FontAwesomeIcon icon={showMore ? faChevronUp : faChevronDown} />
                 </ShowMoreButton>
             </BoardsSection>
-
             {isDeleteModalOpen && (
                 <DeleteBoardModal
                     boardTitle={boardName} // Pass the board title here
@@ -303,7 +281,6 @@ const Sidebar = ({ boards, setBoards }) => {
                     onClose={closeDeleteModal}
                 />
             )}
-
             {isEditModalOpen && (
                 <EditBoardModal
                     onClose={closeEditModal}
@@ -312,11 +289,8 @@ const Sidebar = ({ boards, setBoards }) => {
                     setBoardTitle={setBoardName}
                 />
             )}
-
-        <SignOut />
+            <SignOut/>
         </SidebarContainer>
-        
     );
 };
-
 export default Sidebar;

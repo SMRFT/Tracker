@@ -4,13 +4,14 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { useLocation, useNavigate } from 'react-router-dom';
 import Comment from './Comment';
 import styled from "styled-components";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBell } from '@fortawesome/free-solid-svg-icons';
-
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { FaCalendarAlt } from 'react-icons/fa';
 const ItemType = {
   CARD: "card",
 };
-
+const localizer = momentLocalizer(moment);
 const Card = ({ id, index, columnId, text, moveCard, openModal }) => {
   const [, drag] = useDrag({
     type: ItemType.CARD,
@@ -105,14 +106,14 @@ const Column = ({
       <h3 style={styles.columnTitle}>{title}</h3>
       {cards.map((card, index) => (
         <div key={card.cardId} style={styles.cardContainer}>
-<Card
-  id={card.cardId}
-  index={index}
-  columnId={id}
-  text={card.cardName}
-  moveCard={moveCard}
-  openModal={(cardName) => openModal(card.cardName, card.cardId)} // Pass the required parameters
-/>
+          <Card
+            id={card.cardId}
+            index={index}
+            columnId={id}
+            text={card.cardName}
+            moveCard={moveCard}
+            openModal={(cardName) => openModal(card.cardName, card.cardId)} // Pass the required parameters
+          />
 
           <button
             onClick={() => handleRemoveCard(card.cardId)}
@@ -158,8 +159,7 @@ const Column = ({
 const DragAndDropCards = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { employeeId, employeeName, boardName, boardColor } = location.state || {};
-
+  const { employeeId, employeeName,boardId, boardName } = location.state || {};
 
   const [columns, setColumns] = useState({
     do: [],
@@ -167,76 +167,66 @@ const DragAndDropCards = () => {
     done: [],
     hold: [],
   });
-  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
 
-  // Notification state
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  const toggleNotificationModal = () => {
-    setIsNotificationModalOpen(!isNotificationModalOpen);
-    setUnreadCount(0); // Reset unread count
-  };
-
-
-  const [modalContent, setModalContent] = useState({ cardName: "", cardId: "", boardName: "" });
+  const [modalContent, setModalContent] = useState({ cardName: "", cardId: "", boardName: "" ,boardId:''});
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const [nextCardId, setNextCardId] = useState(1); // Initialize cardId counter
+  const [editedCardName, setEditedCardName] = useState("");
   const [cardId, setCardId] = useState(""); // State for current cardId
   const [cardName, setCardName] = useState(""); // State for current cardName
+  const [isCalendarVisible, setIsCalendarVisible] = useState(false); // State to control calendar visibility
+  const [events, setEvents] = useState([]); // State for calendar events
 
   useEffect(() => {
-    if (boardName) {
-      fetchCards(boardName); // Fetch cards only if boardName is available
+    if (boardId) {
+      fetchCards(boardId); // Fetch cards only if boardName is available
     }
-  }, [boardName]);
+  }, [boardId]);
 
-  const fetchCards = (boardName) => {
-    // Fetch all cards to ensure continuous `nextCardId`
-    fetch("http://127.0.0.1:8000/cards/")
+  const fetchCards = (boardId) => {
+    fetch(`http://127.0.0.1:8000/cards/?boardId=${boardId}`)
       .then((response) => response.json())
-      .then((allData) => {
-        // Calculate the next card ID
-        const maxCardId = Math.max(...allData.map(card => parseInt(card.cardId, 10)), 0);
-        setNextCardId(maxCardId + 1);
-  
-        // Fetch cards filtered by boardName
-        fetch(`http://127.0.0.1:8000/cards/?boardName=${boardName}`)
-          .then((response) => response.json())
-          .then((data) => {
-            console.log("Fetched cards for board:", data);
-            const updatedColumns = {
-              do: data.filter((card) => card.columnId === "do"),
-              doing: data.filter((card) => card.columnId === "doing"),
-              done: data.filter((card) => card.columnId === "done"),
-              hold: data.filter((card) => card.columnId === "hold"),
-            };
-            setColumns(updatedColumns);
-          })
-          .catch((error) => {
-            console.error("Error fetching board-specific cards:", error);
-          });
+      .then((data) => {
+        const updatedColumns = {
+          do: data.filter((card) => card.columnId === "do"),
+          doing: data.filter((card) => card.columnId === "doing"),
+          done: data.filter((card) => card.columnId === "done"),
+          hold: data.filter((card) => card.columnId === "hold"),
+        };
+        setColumns(updatedColumns);
+
+        // Map the data to calendar events
+        const calendarEvents = data.map(card => ({
+          title: card.cardName,
+          start: new Date(card.startdate),
+          end: new Date(card.enddate),
+          allDay: false, // Set to true if you want all-day events
+        }));
+        setEvents(calendarEvents);
       })
-      .catch((error) => {
-        console.error("Error fetching all cards:", error);
-      });
+      .catch((error) => console.error("Error fetching cards:", error));
   };
+
   
 
   const moveCard = (fromIndex, fromColumnId, toIndex, toColumnId) => {
     const updatedColumns = { ...columns };
+  
     if (!updatedColumns[fromColumnId] || !updatedColumns[toColumnId]) {
       console.error('Invalid column IDs:', fromColumnId, toColumnId);
       return;
     }
+  
     const [movedCard] = updatedColumns[fromColumnId].splice(fromIndex, 1);
+  
     if (!movedCard) {
       console.error('Card not found:', { fromIndex, fromColumnId });
       return;
     }
+  
     updatedColumns[toColumnId].splice(toIndex, 0, movedCard);
+  
     setColumns(updatedColumns);
+  
     fetch(`http://127.0.0.1:8000/cards/${movedCard.cardId}/`, {
       method: "PATCH",
       headers: {
@@ -246,12 +236,31 @@ const DragAndDropCards = () => {
     }).catch((error) => {
       console.error("Error updating card column:", error);
     });
-  }
+  };
+  const handleEditCardName = () => {
+    fetch(`http://127.0.0.1:8000/cards/${modalContent.cardId}/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cardName: editedCardName }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          const updatedColumns = { ...columns };
+          const updatedCards = updatedColumns[modalContent.boardName].map((card) =>
+            card.cardId === modalContent.cardId ? { ...card, cardName: editedCardName } : card
+          );
+          setColumns({ ...updatedColumns, [modalContent.boardName]: updatedCards });
+          setIsModalOpen(false);
+        }
+      })
+      .catch((error) => console.error("Error updating card name:", error));
+  };
 
   const addCard = async (columnId, text) => {
     const newCard = {
-      cardId: `${nextCardId}`,
+      cardId,
       cardName: text || `Task ${Date.now()}`,
+      boardId,
       columnId,
       employeeId,
       employeeName,
@@ -281,7 +290,6 @@ const DragAndDropCards = () => {
           cardName: data.cardName,
         });
         setColumns(updatedColumns);
-        setNextCardId(nextCardId + 1); // Increment cardId counter
       } else {
         console.error("Error adding card:", response.statusText);
       }
@@ -302,17 +310,27 @@ const DragAndDropCards = () => {
   };
 
   return (
-    <TodolistContainer bgColor={boardColor}>
+    
     <DndProvider backend={HTML5Backend}>
-    <Employeecontainer>
-          {/* Notification Icon with unread count */}
-          <NotificationIcon onClick={toggleNotificationModal}>
-            <FontAwesomeIcon icon={faBell} />
-            {unreadCount > 0 && <span style={styles.notificationBadge}>{unreadCount}</span>}
-          </NotificationIcon>
-          <div>ID: {employeeId}</div>
-          <div>Name: {employeeName}</div>
-        </Employeecontainer>
+      <div style={styles.header}>
+      <FaCalendarAlt
+        style={styles.calendarIcon}
+        onClick={() => setIsCalendarVisible(!isCalendarVisible)}
+      />
+    </div>
+    {isCalendarVisible && (
+      <div style={styles.calendarContainer}>
+        <Calendar
+          localizer={localizer}
+          events={events}
+          startAccessor="start"
+          endAccessor="end"
+          style={styles.calendar}
+          // Add a custom `eventPropGetter` if needed to customize event styles
+          // eventPropGetter={(event) => ({ style: { backgroundColor: 'lightblue' } })}
+        />
+      </div>
+    )}
       <div style={styles.board}>
         <Column
           id="do"
@@ -323,7 +341,7 @@ const DragAndDropCards = () => {
           addCard={addCard}
           columns={columns}
           setColumns={setColumns}
-          backgroundColor="#F1F2F4"
+          backgroundColor="#FFB6C1"
           showAddCardButton={true}
         />
         <Column
@@ -334,7 +352,7 @@ const DragAndDropCards = () => {
           openModal={openModal}
           columns={columns}
           setColumns={setColumns}
-          backgroundColor="#F1F2F4"
+          backgroundColor="#87CEEB"
         />
         <Column
           id="done"
@@ -344,7 +362,7 @@ const DragAndDropCards = () => {
           openModal={openModal}
           columns={columns}
           setColumns={setColumns}
-          backgroundColor="#F1F2F4"
+          backgroundColor="#98FB98"
         />
         <Column
           id="hold"
@@ -354,16 +372,25 @@ const DragAndDropCards = () => {
           openModal={openModal}
           columns={columns}
           setColumns={setColumns}
-          backgroundColor="#F1F2F4"
+          backgroundColor="#FFDEAD"
         />
       </div>
-
+   
       {isModalOpen && (
         <div className="modal" tabIndex="-1" role="dialog" style={styles.modal}>
           <div className="modal-dialog" role="document">
             <div className="modal-content">
               <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <h5 className="modal-title">{boardName}</h5>
+               <input
+              type="text"
+              value={editedCardName}
+              onChange={(e) => setEditedCardName(e.target.value)}
+              style={styles.input}
+              placeholder={modalContent.cardName}
+            />
+            <button onClick={handleEditCardName} style={styles.addCardButton}>
+              Save
+            </button>
                 <div
                   type="button"
                   aria-label="Close"
@@ -378,159 +405,34 @@ const DragAndDropCards = () => {
                   cardId={cardId} 
                   cardName={cardName} 
                   boardName={boardName} 
+                  employeeId={employeeId}
+                  employeeName={employeeName}
+                  boardId={boardId}
                 />
               </div>
             </div>
           </div>
         </div>
       )}
-              {/* Notification Modal */}
-              {isNotificationModalOpen && (
-          <div className="modal" tabIndex="-1" role="dialog" style={styles.modal}>
-            <div className="modal-dialog" role="document">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Notifications</h5>
-                  <button type="button" onClick={toggleNotificationModal} style={{ cursor: 'pointer', fontSize: '2rem' }}>
-                    &times;
-                  </button>
-                </div>
-                <div className="modal-body">
-                  {notifications.length > 0 ? (
-                    <ul>
-                      {notifications.map((notification, index) => (
-                        <li key={index} style={{ color: notification.read ? 'gray' : 'black' }}>
-                          {notification.content}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>No notifications.</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
     </DndProvider>
-     </TodolistContainer>
   );
 };
-// Styled component for the overall page
-const TodolistContainer = styled.div`
-    background-color: ${(props) => props.bgColor || '#ffffff'};
-    min-height: 100vh;
-    padding: 20px;
-`;
-const ModalContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-`;
 
-// Styled component for the Modal Dialog
-const ModalDialog = styled.div`
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  width: 400px;
-  max-width: 80%;
-  padding: 20px;
-`;
 
-// Styled component for the Modal Header
-const ModalHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 1.5rem;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
-`;
-
-// Styled component for the Modal Body
-const ModalBody = styled.div`
-  padding: 10px 0;
-  font-size: 1rem;
-`;
-
-// Styled component for the Close Button
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-`;
-
-// Styled component for Notification List
-const NotificationList = styled.ul`
-  list-style-type: none;
-  padding: 0;
-`;
-
-// Styled component for Notification Item
-const NotificationItem = styled.li`
-  padding: 10px;
-  color: ${(props) => (props.read ? "gray" : "black")};
-  font-weight: ${(props) => (props.read ? "normal" : "bold")};
-  &:hover {
-    background-color: #f9f9f9;
-  }
-`;
-const Employeecontainer = styled.div`
-  background-color: #F1F2F4;
-  padding: 16px;
-  float: right;
-  border-radius: 8px;
-  color: pink;
-  width: 300px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  position: relative; /* To position the notification icon */
-`;
-
-const NotificationIcon = styled.div`
-  position: absolute;
-  top: 8px; /* Adjust as needed */
-  right: 35px; /* Adjust as needed */
-  font-size: 40px;
-  color: #81DAE3; /* Color for the icon (you can change this) */
-  cursor: pointer;
-  
-  &:hover {
-    color: #ff4500;
-  }
-`;
 
 
 const styles = {
-  notificationBadge: {
-    position: 'absolute',
-    top: '-10px',
-    right: '-10px',
-    backgroundColor: 'red',
-    color: 'white',
-    borderRadius: '50%',
-    padding: '5px 10px',
-    fontSize: '12px',
-  },
   board: {
     display: "flex",
     justifyContent: "space-around",
     padding: "20px",
     marginTop: '80px',
-    marginLeft: '20px',
   },
   column: {
-    width: "280px",
+    width: "250px",
     padding: "10px",
-    borderRadius: "20px",
+    borderRadius: "5px",
+    minHeight: "400px",
     boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
     gap:"10px",
   },
@@ -540,7 +442,7 @@ const styles = {
 
   },
   card: {
-    backgroundColor: "#F1F2F4",
+    backgroundColor: "#fff",
     borderRadius: "5px",
     padding: "10px",
     marginBottom: "10px",
@@ -606,6 +508,27 @@ const styles = {
     fontSize: "18px",
     cursor: "pointer",
   },
+  calendarIcon: {
+    fontSize: '24px',
+    cursor: 'pointer',
+  },
+  calendarContainer: {
+    position: 'fixed',
+    top: 0,
+    left: 250,
+    width: '85vw',
+    height: '90vh',
+    backgroundColor: '#fff',
+    border: 'none',
+    borderRadius: 0,
+    boxShadow: 'none',
+    zIndex: 9999, // Ensure the calendar appears above other content
+    overflow: 'hidden', // Prevent scrollbars if needed
+  },
+  calendar: {
+    height: '100%', // Ensure the calendar occupies the full height of the container
+    width: '100%',  // Ensure the calendar occupies the full width of the container
+  },
   modal: {
     position: "fixed",
     top: 0,
@@ -635,6 +558,5 @@ const styles = {
     cursor: "pointer",
   },
 };
-
 
 export default DragAndDropCards;
